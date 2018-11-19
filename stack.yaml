@@ -1,0 +1,8 @@
+resolver: lts-12.8
+
+packages:
+- .
+
+extra-deps:
+
+#- base-compat-0.9.3

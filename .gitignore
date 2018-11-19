@@ -4,3 +4,6 @@
 .settings
 *.iml
 *~
+.idea
+.stack-work
+*.cabal
