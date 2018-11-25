@@ -11,6 +11,7 @@ library:
 
 dependencies:
 
+- base
 - time
 - random-shuffle
 - directory

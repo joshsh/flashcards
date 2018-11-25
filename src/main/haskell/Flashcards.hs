@@ -1,5 +1,10 @@
 module Flashcards
-  ( flashcards ) where
+  ( DeckId
+  , CardId
+  , Deck(..)
+  , Card(..)
+  , loadTsv, trim -- TODO: move to utilities
+  , flashcards ) where
 
 import qualified Control.Exception     as CE
 import qualified Control.Monad         as CM
@@ -84,7 +89,8 @@ loadTsv :: Bool -> FilePath -> IO [[String]]
 loadTsv skipHeader path = do
   contents <- IO.readFile path
   let entries = fmap (\line -> LS.splitOn "\t" $ trim line) $ L.lines contents
-  return (if skipHeader then L.tail entries else entries)
+  let rows = fmap (fmap trim) $ (if skipHeader then L.tail entries else entries)
+  return rows
 
 toEntry :: M.Map DeckId Deck -> [String] -> Maybe LogEntry
 toEntry decks row = toE row
@@ -150,51 +156,6 @@ decksToMap :: [Deck] -> M.Map DeckId Deck
 decksToMap decks = L.foldl addDeck M.empty decks
   where
     addDeck m d = M.insert (deckId d) d m
-
-data CountryCapital = CountryCapital
-  { ccCountryIri   :: String
-  , ccCapitalIri   :: String
-  , ccCountryLabel :: String
-  , ccCapitalLabel :: String } deriving Show
-
-capitalsDeckId = "jx6tbUdmmHmX8Qms"
-
-toCapitalsDeck :: [CountryCapital] -> Deck
-toCapitalsDeck entries = deck
-  where
-    deck = Deck capitalsDeckId cardMap
-    cards = fmap toCard entries
-    cardMap = L.foldl (\m c -> M.insert (cardId c) c m) M.empty cards
-    toCard (CountryCapital country _ countryLabel capitalLabel) = Card id deck front reverse
-      where
-        id = country
-        front = "What is the capital of " ++ countryLabel ++ "?"
-        reverse = capitalLabel
-
-toCountryCapitalEntry :: [String] -> Maybe CountryCapital
-toCountryCapitalEntry row
-  = if L.null capitalLabel || L.null capital || L.null country || L.null countryLabel
-  then Nothing
-  else Just $ CountryCapital country capital countryLabel capitalLabel
-  where
-    capitalLabel = trim $ row !! 2
-    capital = trim $ row !! 3
-    country = trim $ row !! 4
-    countryLabel = trim $ row !! 5
-
-loadExampleDeck :: IO Deck
-loadExampleDeck = do
-  rows <- loadTsv True "/tmp/country-capitals.tsv"
-  let ccEntries = Y.catMaybes $ fmap toCountryCapitalEntry rows
-  let deck = toCapitalsDeck ccEntries
-  return deck
-
-
-
---logResult :: LogResult -> _ -> IO ()
-
-
-
 
 pickCard :: Game -> (CardInStack, Game)
 pickCard game = if stackIsReady then pickFromStack else pickFromQueue
@@ -268,10 +229,9 @@ prettyPrintDeck (Deck id cards) = L.foldl appendCard id $ M.elems cards
     appendCard s c = s ++ "\n  " ++ showCard c
     showCard (Card id _ front reverse) = show [id, front, reverse]
 
-flashcards :: IO Game
-flashcards = do
+flashcards :: Deck -> IO Game
+flashcards deck = do
   let logFile = "/tmp/flashcards.log.tsv"
-  deck <- loadExampleDeck
   -- IO.putStrLn $ prettyPrintDeck deck
   let decks = [deck]
   let deckMap = decksToMap decks
