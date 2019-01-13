@@ -10,7 +10,6 @@ import qualified System.Directory      as D
 import qualified Data.Int              as I
 import qualified System.IO             as IO
 import qualified Data.List             as L
-import qualified Data.List.Split       as LS
 import qualified Data.Map              as M
 import qualified System.Random.Shuffle as RS
 import qualified Data.Set              as S
@@ -21,11 +20,12 @@ import qualified Data.Maybe            as Y
 hasNull :: [[a]] -> Bool
 hasNull vals = L.foldl (\m v -> m || L.null v) False vals
 
-loadDeck :: FilePath -> ([String] -> Maybe a) -> ([a] -> Deck) -> IO Deck
-loadDeck file fromEntry toDeck = do
-  rows <- loadTsv True file
+loadDeck :: FilePath -> (TableRow -> Maybe a) -> ([a] -> Deck) -> IO Deck
+loadDeck file fromRow toDeck = do
+  cells <- loadTsv False file
+  let rows = toRows cells
   putStrLn $ "loaded " ++ (show $ L.length rows) ++ " rows"
-  let entries = Y.catMaybes $ fmap fromEntry rows
+  let entries = Y.catMaybes $ fmap fromRow rows
   putStrLn $ "created " ++ (show $ L.length entries) ++ " entries"
   let deck = toDeck entries
   putStrLn $ "created deck of " ++ (show $ L.length $ M.elems $ deckCards deck) ++ " cards"
@@ -48,12 +48,12 @@ data CountryCapital = CountryCapital
 
 capitalsDeckId = "jx6tbUdmmHmX8Qms"
 
-toCountryCapitalEntry :: [String] -> Maybe CountryCapital
-toCountryCapitalEntry (_:_:capitalLabel:capital:country:countryLabel:_)
-  = if hasNull [capitalLabel, capital, country, countryLabel]
-  then Nothing
-  else Just $ CountryCapital country capital countryLabel capitalLabel
-toCountryCapitalEntry _ = Nothing
+toCountryCapitalEntry :: TableRow -> Maybe CountryCapital
+toCountryCapitalEntry row = forQuestion (row "capitalLabel") (row "capital") (row "country") (row "countryLabel")
+  where
+    forQuestion (Just capitalLabel) (Just capital) (Just country) (Just countryLabel)
+      = Just $ CountryCapital country capital countryLabel capitalLabel
+    forQuestion _ _ _ _ = Nothing
 
 toCountryCapitalCard :: Deck -> CountryCapital -> Card
 toCountryCapitalCard deck (CountryCapital country _ countryLabel capitalLabel) = Card id deck front reverse
@@ -74,13 +74,14 @@ data Question
 
 categoryTheoryDeckId = "sYTqbtAGaWtVhrAn"
 
-toQuestion :: [String] -> Maybe Question
-toQuestion (_:_:qtype:question:answer:_) = if hasNull [qtype, question, answer]
-  then Nothing
-  else Just $ if qtype == "definition"
-    then DefinitionQuestion question answer
-    else FreeFormQuestion question answer
-toQuestion _ = Nothing
+toQuestion :: TableRow -> Maybe Question
+toQuestion row = forQuestion (row "type") (row "question") (row "answer")
+  where
+    forQuestion (Just qtype) (Just question) (Just answer)
+      = Just $ if qtype == "definition"
+        then DefinitionQuestion question answer
+        else FreeFormQuestion question answer
+    forQuestion _ _ _ = Nothing
 
 toQuestionCard :: Deck -> Question -> Card
 toQuestionCard deck (DefinitionQuestion term answer) = Card id deck front reverse

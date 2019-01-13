@@ -3,9 +3,12 @@ module Flashcards
   , CardId
   , Deck(..)
   , Card(..)
+  , TableRow
+  , toRows
   , loadTsv, trim -- TODO: move to utilities
   , flashcards ) where
 
+import qualified Data.Char             as C
 import qualified Control.Exception     as CE
 import qualified Control.Monad         as CM
 import qualified System.Directory      as D
@@ -78,12 +81,19 @@ instance CE.Exception FlashcardsError
 
 data Response = Correct | Incorrect | Quit deriving Eq
 
-trim :: String -> String
-trim = trimHead . L.reverse . trimHead . L.reverse
+type TableRow = String -> Maybe String
+
+toRows :: [[String]] -> [TableRow]
+toRows entries = if L.null entries then []
+  else fmap toRow $ L.tail entries
   where
-    trimHead [] = []
-    trimHead (' ':rest) = rest
-    trimHead s = s
+    headers :: [String]
+    headers = L.head entries
+    indexMap :: M.Map String Int
+    indexMap = L.foldl (\m (n, i) -> M.insert n i m) M.empty $ L.zipWith (\n i -> (n, i)) headers [0..]
+    toRow :: [String] -> TableRow
+    toRow cells = \n -> Y.maybe Nothing (getCell cells) $ M.lookup n indexMap
+    getCell cells i = if L.length cells <= i then Nothing else Just $ cells !! i
 
 loadTsv :: Bool -> FilePath -> IO [[String]]
 loadTsv skipHeader path = do
@@ -91,6 +101,11 @@ loadTsv skipHeader path = do
   let entries = fmap (\line -> LS.splitOn "\t" $ trim line) $ L.lines contents
   let rows = fmap (fmap trim) $ (if skipHeader then L.tail entries else entries)
   return rows
+
+trim :: String -> String
+trim = f . f
+  where
+    f = reverse . dropWhile C.isSpace
 
 toEntry :: M.Map DeckId Deck -> [String] -> Maybe LogEntry
 toEntry decks row = toE row
