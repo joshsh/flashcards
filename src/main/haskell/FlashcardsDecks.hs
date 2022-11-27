@@ -1,6 +1,7 @@
 module FlashcardsDecks
   ( countryCapitalsDeck
-  , categoryTheoryDeck ) where
+  , categoryTheoryDeck
+  , numberMnemonicsDeck) where
 
 import Flashcards
 
@@ -72,29 +73,45 @@ data Question
   = DefinitionQuestion String String
   | FreeFormQuestion String String
 
-categoryTheoryDeckId = "sYTqbtAGaWtVhrAn"
-
-toQuestion :: TableRow -> Maybe Question
-toQuestion row = forQuestion (row "type") (row "question") (row "answer")
-  where
-    forQuestion (Just qtype) (Just question) (Just answer)
-      = Just $ if qtype == "definition"
-        then DefinitionQuestion question answer
-        else FreeFormQuestion question answer
-    forQuestion _ _ _ = Nothing
-
-toQuestionCard :: Deck -> Question -> Card
-toQuestionCard deck (DefinitionQuestion term answer) = Card id deck front reverse
-  where
-    id = term -- TODO
-    front = "Define '" ++ term ++ "'"
-    reverse = answer
-toQuestionCard deck (FreeFormQuestion question answer) = Card id deck question answer
-  where
-    id = question -- TODO
-
 categoryTheoryDeck :: IO Deck
 categoryTheoryDeck = loadDeck "/tmp/flashcards from Category Theory for Programmers - Sheet1.tsv"
-  toQuestion $ toDeck categoryTheoryDeckId toQuestionCard
+    toQuestion $ toDeck categoryTheoryDeckId toQuestionCard
+  where
+    categoryTheoryDeckId = "sYTqbtAGaWtVhrAn"
+
+    toQuestion :: TableRow -> Maybe Question
+    toQuestion row = forQuestion (row "type") (row "question") (row "answer")
+      where
+        forQuestion (Just qtype) (Just question) (Just answer)
+          = Just $ if qtype == "definition"
+            then DefinitionQuestion question answer
+            else FreeFormQuestion question answer
+        forQuestion _ _ _ = Nothing
+
+    toQuestionCard :: Deck -> Question -> Card
+    toQuestionCard deck (DefinitionQuestion term answer) = Card id deck front reverse
+      where
+        id = term -- TODO
+        front = "Define '" ++ term ++ "'"
+        reverse = answer
+
+    toQuestionCard deck (FreeFormQuestion question answer) = Card id deck question answer
+      where
+        id = question -- TODO
 
 {------------------------------------------------------------------------------}
+
+data MnemoQuestion = MnemoQuestion String String
+
+numberMnemonicsDeck :: IO Deck
+numberMnemonicsDeck = loadDeck "/tmp/Number mnemonics 0-999 - 0-99.tsv"
+    toQuestion $ toDeck numberMnemonicsDeckId toMnemoCard
+  where
+    numberMnemonicsDeckId = "JgDXKrxwM8bgzNYM"
+
+    toQuestion row = forQuestion (row "number") (row "rote mnemonic")
+      where
+        forQuestion (Just num) (Just mnemo) = Just $ MnemoQuestion num mnemo
+        forQuestion _ _ = Nothing
+
+    toMnemoCard deck (MnemoQuestion num mnemo) = Card num deck num mnemo

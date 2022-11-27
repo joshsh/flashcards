@@ -244,6 +244,10 @@ prettyPrintDeck (Deck id cards) = L.foldl appendCard id $ M.elems cards
     appendCard s c = s ++ "\n  " ++ showCard c
     showCard (Card id _ front reverse) = show [id, front, reverse]
 
+{-
+  e.g. categoryTheoryDeck >>= flashcards
+       numberMnemonicsDeck >>= flashcards
+-}
 flashcards :: Deck -> IO Game
 flashcards deck = do
   let logFile = "/tmp/flashcards.log.tsv"
