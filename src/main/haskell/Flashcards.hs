@@ -245,6 +245,7 @@ prettyPrintDeck (Deck id cards) = L.foldl appendCard id $ M.elems cards
     showCard (Card id _ front reverse) = show [id, front, reverse]
 
 {-
+
   e.g. categoryTheoryDeck >>= flashcards
        numberMnemonicsDeck >>= flashcards
 -}

@@ -4,3 +4,12 @@ The premise of the application is that human memory is subject to [exponential d
 
 A graphical Flashcards interface is included in [Extendo-Android](https://github.com/joshsh/extendo-android).
 
+### Build (Java)
+
+```java
+mvn install
+```
+
+### Use
+
+

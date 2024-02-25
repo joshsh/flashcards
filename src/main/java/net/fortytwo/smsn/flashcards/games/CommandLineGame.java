@@ -14,6 +14,7 @@ import net.fortytwo.smsn.flashcards.db.GameHistory;
 import net.fortytwo.smsn.flashcards.db.memory.MemoryCardStore;
 import net.fortytwo.smsn.flashcards.decks.geo.InternationalBorders;
 import net.fortytwo.smsn.flashcards.decks.tech.HttpStatusCodes;
+import net.fortytwo.smsn.flashcards.decks.tech.MorseCode;
 import net.fortytwo.smsn.flashcards.decks.vocab.FrenchVocabulary;
 import net.fortytwo.smsn.flashcards.decks.vocab.GermanVocabulary;
 import net.fortytwo.smsn.flashcards.decks.vocab.HSK4ChineseCharacters;
@@ -122,24 +123,26 @@ public class CommandLineGame extends Game<String, String> {
             Deck<String, String> swedishVocabulary = new SwedishVocabulary(f, store);
 
             Deck<String, String> httpStatusCodes = new HttpStatusCodes(f, store);
+            Deck<String, String> morseCode = new MorseCode(f, store);
 
             //Pile<String, String> pile = new SingleDeckPile<String, String>(d);
 
             PriorityPile<String, String> pile = new PriorityPile<String, String>();
-            //*
-            //pile.addDeck(stateBorders, 1);
-            pile.addDeck(nationalCapitals, 1000);
-            pile.addDeck(internationalBorders, 1);
-            //pile.addDeck(npcrVocabulary, 4);
-            pile.addDeck(hsk4Compounds, 5);
-            pile.addDeck(hsk4Characters, 10);
-            //*/
-            pile.addDeck(frenchVocabulary, 10);
-            pile.addDeck(germanVocabulary, 10);
-            pile.addDeck(swedishVocabulary, 10);
-            pile.addDeck(httpStatusCodes, 5);
+//            //*
+//            //pile.addDeck(stateBorders, 1);
+//            pile.addDeck(nationalCapitals, 1000);
+//            pile.addDeck(internationalBorders, 1);
+//            //pile.addDeck(npcrVocabulary, 4);
+//            pile.addDeck(hsk4Compounds, 5);
+//            pile.addDeck(hsk4Characters, 10);
+//            //*/
+//            pile.addDeck(frenchVocabulary, 10);
+//            pile.addDeck(germanVocabulary, 10);
+//            pile.addDeck(swedishVocabulary, 10);
+//            pile.addDeck(httpStatusCodes, 5);
+            pile.addDeck(morseCode, 5);
 
-            GameHistory h = new FileBasedGameHistory(new File("/tmp/tmpflashcards.txt"));
+            GameHistory h = new FileBasedGameHistory(new File("/tmp/flashcards.txt"));
 
             new CommandLineGame(pile, h).play();
         } catch (Throwable e) {
